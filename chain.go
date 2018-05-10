@@ -8,6 +8,7 @@ import (
 
 // TODO Add scriptSig 
 // TODO Add real UTXOs (multiple outs, ins)
+
 //Transaction data model
 type Transaction struct {
 	Value int
@@ -16,7 +17,7 @@ type Transaction struct {
 }
 
 //Block data model
-// blocksize: 1 transaction
+// blocksize: 1 transaction per block
 type Block struct {
 	Index int
 	Hash string
@@ -31,8 +32,14 @@ var Blockchain []Block
 var mutex sync.Mutex
 
 func genesisBlock() Block {
-	// Wednesday 9th May 2018 10:16:19 PM UTC
-	return Block{0, "3cd45a480c2601ed55245eac8b233c680f111eaad30c568a318e5213f7f0f522", "0", Transaction{}, 1525904179}
+
+	txData := Transaction{ 
+		BlockRewardValue(),
+		CoinbaseInput,
+		"@tiero",
+	}
+
+	return Block{ 0, GenesisBlockHash, "0", txData, GenesisTimestamp}
 }
 
 func latestBlock() Block {
@@ -77,4 +84,25 @@ func isValidBlock(newBlock Block, previousBlock Block) bool {
 		return false 
 	}
 	return true
+}
+
+func isValidChain(newBlockchain []Block) bool {
+	if newBlockchain[0].Hash != genesisBlock().Hash {
+		return false
+	}
+
+	tempBlockchain := []Block{newBlockchain[0]}
+	for i := 1; i < len(newBlockchain); i++ {
+		if isValidBlock(newBlockchain[i], tempBlockchain[i-1]) {
+			tempBlockchain = append(tempBlockchain, newBlockchain[i]) 
+		} else {
+			return false
+		}
+	}
+
+	return true
+}
+
+func BlockRewardValue() int { 
+	return InitialBlockReward
 }
