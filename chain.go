@@ -56,7 +56,9 @@ func initBlockchain() {
 func replaceBlockchain(newBlockchain []Block) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	Blockchain = newBlockchain
+	if isValidChain(newBlockchain) {
+		Blockchain = newBlockchain
+	}
 }
 
 func addBlock(nextBlock Block) {

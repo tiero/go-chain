@@ -16,7 +16,7 @@ const GenesisTimestamp int64	= 1525904179
 // InitialBlockReward 
 // 50 coins
 // 1 coin = 10 ** 8 tiero
-const InitialBlockReward int		= (50 * 100 000 000) 
+const InitialBlockReward int		= (50 * 100000000) 
 
 // CoinbaseInput
 // represent the string used in the special case of no previous unspent output, the transaction representing the block reward

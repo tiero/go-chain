@@ -25,7 +25,6 @@ var routes = Routes{
 		Blocks,
 	},
 	Route{ 
-		// for testing purpose. Do not use!
 		"POST", 
 		"/block",
 		NewBlock,
