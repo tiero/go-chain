@@ -21,8 +21,13 @@ var routes = Routes{
 	},
 	Route{
 		"GET",
-		"/blocks",
+		"/block",
 		Blocks,
+	},
+	Route{
+		"POST",
+		"/block",
+		NewBlock,
 	},
 }
 

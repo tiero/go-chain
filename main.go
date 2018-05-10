@@ -15,9 +15,9 @@ var Blockchain []Block
 // TODO Add real UTXOs (multiple outs, ins)
 //Transaction data model
 type Transaction struct {
-	value int
-	input string
-	output string
+	Value int
+	Input string
+	Output string
 }
 
 //Block data model
@@ -27,7 +27,7 @@ type Block struct {
 	Hash string
 	PreviousHash string
 	Data Transaction
-	Timestamp int
+	Timestamp int64
 }
 
 
