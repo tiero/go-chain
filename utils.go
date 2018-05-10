@@ -8,7 +8,8 @@ import (
 
 
 func calculateHash(index int, prevHash string, data Transaction, timestamp int64) string {
-	payload := fmt.Sprint(index) + prevHash + fmt.Sprint(data.Value) + data.Input + data.Output + fmt.Sprint(timestamp)
+	txData := fmt.Sprint(data.Value) + data.Input + data.Output
+	payload := fmt.Sprint(index) + prevHash + txData + fmt.Sprint(timestamp)
 	h := sha256.New()
 	h.Write([]byte(payload))
 
