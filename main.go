@@ -8,28 +8,6 @@ import (
 const HttpPort = "3000"
 const P2pPort = "6000"
 
-var Blockchain []Block
-
-
-// TODO Add scriptSig 
-// TODO Add real UTXOs (multiple outs, ins)
-//Transaction data model
-type Transaction struct {
-	Value int
-	Input string
-	Output string
-}
-
-//Block data model
-// blocksize: 1 transaction
-type Block struct {
-	Index int
-	Hash string
-	PreviousHash string
-	Data Transaction
-	Timestamp int64
-}
-
 
 func main() {
 	//Starting the blockchain from hardcoded genesis block
