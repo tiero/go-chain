@@ -13,16 +13,16 @@ go build
 
 ## Node
 
-Run the first node
+Run the first node on port **3000**
 
 ```
 HTTP_PORT="3000" $GOPATH/bin/go-chain
 ```
 
-Run the second node on other port
+Run the second node on port **3001**
 
 ```
-HTTP_PORT="3000" $GOPATH/bin/go-chain
+HTTP_PORT="3001" $GOPATH/bin/go-chain
 ```
 
 ## Peers
@@ -46,7 +46,7 @@ It exposes an HTTP server with the following endpoints:
 * GET   `/block`
 * POST  `/block`  Body: `{ "Value":100000000, "Input":"coinbase", "Output": "@tiero" }`
 * GET   `/peer` 
-* POST  `/peer` Body: `{ "Port" : "3000" }`
+* POST  `/peer` Body: `{ "Port" : "3001" }`
 
 
 
