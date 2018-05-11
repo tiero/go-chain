@@ -7,7 +7,7 @@ import (
 )
 
 
-func calculateHash(index int, prevHash string, data Transaction, timestamp int64) string {
+func calculateHash(index uint64, prevHash string, data Transaction, timestamp uint64) string {
 	txData := fmt.Sprint(data.Value) + data.Input + data.Output
 	payload := fmt.Sprint(index) + prevHash + txData + fmt.Sprint(timestamp)
 	h := sha256.New()

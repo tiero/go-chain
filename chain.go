@@ -1,17 +1,20 @@
 package main
 
 import (
+	"net/url"
+	"log"
 	"sync"
 	"time"
 )
 
+import "github.com/gorilla/websocket"
 
 // TODO Add scriptSig 
 // TODO Add real UTXOs (multiple outs, ins)
 
 //Transaction data model
 type Transaction struct {
-	Value int
+	Value uint64
 	Input string
 	Output string
 }
@@ -19,15 +22,16 @@ type Transaction struct {
 //Block data model
 // blocksize: 1 transaction per block
 type Block struct {
-	Index int
+	Index uint64
 	Hash string
 	PreviousHash string
 	Data Transaction
-	Timestamp int64
+	Timestamp uint64
 }
 
 // Our beloved and complicated blockchain <3
 var Blockchain []Block
+var Peers []string
 
 var mutex sync.Mutex
 
@@ -42,9 +46,26 @@ func genesisBlock() Block {
 	return Block{ 0, GenesisBlockHash, "0", txData, GenesisTimestamp}
 }
 
-func latestBlock() Block {
-	return Blockchain[len(Blockchain)-1]
+
+func connectToPeer(port string) (*websocket.Conn, error)  {
+	u := url.URL{Scheme: "ws", Host:"localhost:" + port, Path: "/peer"}
+	log.Printf("connecting to %s", u.String())
+
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	
+	if err == nil {
+		go addPeer(u.String())
+	}
+
+	return c, err
 }
+
+func addPeer(endpoint string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	Peers = append(Peers, endpoint)
+}
+
 
 func initBlockchain() {
 	// we just want to make sure only one goroutine can access a variable at a time to avoid conflicts
@@ -52,6 +73,8 @@ func initBlockchain() {
 	defer mutex.Unlock()
 	Blockchain = append(Blockchain, genesisBlock())
 }
+
+
 
 func replaceBlockchain(newBlockchain []Block) {
 	mutex.Lock()
@@ -70,11 +93,15 @@ func addBlock(nextBlock Block) {
 }
 
 func generateNextBlock(data Transaction) Block {
-	nextTimestamp 	:= time.Now().Unix()
+	nextTimestamp 	:= uint64(time.Now().Unix())
 	previousBlock 	:= latestBlock()
 	nextIndex 	:= previousBlock.Index + 1
 	nextHash 	:= calculateHash(nextIndex, previousBlock.Hash, data, nextTimestamp)
 	return Block{ nextIndex, nextHash, previousBlock.Hash, data, nextTimestamp }
+}
+
+func latestBlock() Block {
+	return Blockchain[len(Blockchain)-1]
 }
 
 func isValidBlock(newBlock Block, previousBlock Block) bool {
@@ -105,6 +132,6 @@ func isValidChain(newBlockchain []Block) bool {
 	return true
 }
 
-func BlockRewardValue() int { 
+func BlockRewardValue() uint64 { 
 	return InitialBlockReward
 }

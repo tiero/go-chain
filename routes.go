@@ -29,6 +29,16 @@ var routes = Routes{
 		"/block",
 		NewBlock,
 	},
+	{
+		"GET",
+		"/peer",
+		Peer,
+	},
+	{
+		"POST",
+		"/peer",
+		NewPeer,
+	},
 }
 
 

@@ -6,8 +6,8 @@ const GenesisBlockHash string	= "3cd45a480c2601ed55245eac8b233c680f111eaad30c568
 
 // GenesisTimestamp
 // Wednesday 9th May 2018 10:16:19 PM UTC
-const GenesisTimestamp int64	= 1525904179 
-//const EndIssuanceTimestamp int64	= 2788208179
+const GenesisTimestamp uint64	= 1525904179 
+//const EndIssuanceTimestamp uint64	= 2788208179
 
 // TotalSupply
 // 21 milions
@@ -16,7 +16,7 @@ const GenesisTimestamp int64	= 1525904179
 // InitialBlockReward 
 // 50 coins
 // 1 coin = 10 ** 8 tiero
-const InitialBlockReward int		= (50 * 100000000) 
+const InitialBlockReward uint64		= (50 * 100000000) 
 
 // CoinbaseInput
 // represent the string used in the special case of no previous unspent output, the transaction representing the block reward
