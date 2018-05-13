@@ -1,26 +1,33 @@
 package main
 
 import (
-	"os"
 	"log"
 	"net/http"
+	"os"
+	"sync"
 )
 
+var blockchain *Blockchain
+var node *Node
 
-const P2pPort = "6000"
+var mutex sync.Mutex
 
-func HttpPort() string {
+//HTTPPort Exposes curent http port
+func HTTPPort() string {
 	return os.Getenv("HTTP_PORT")
 }
 
+//Host Exposes current Host
+func Host() string {
+	return "localhost:" + HTTPPort()
+}
 func main() {
 
 	//Starting the blockchain from hardcoded genesis block
-	go initBlockchain()
-
-	//Mux Router 
+	blockchain = NewBlockchain()
+	node = NewNode(Host(), []string{}, latestBlock(blockchain).Index)
+	//Mux Router
 	router := NewRouter()
 	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(":" + HttpPort(), router))
+	log.Fatal(http.ListenAndServe(Host(), router))
 }
-

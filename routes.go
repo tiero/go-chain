@@ -2,15 +2,18 @@ package main
 
 import (
 	"net/http"
-	"github.com/gorilla/mux"	
+
+	"github.com/gorilla/mux"
 )
 
+//Route is a type
 type Route struct {
-	Method	string
-	Path	string
+	Method  string
+	Path    string
 	Handler http.HandlerFunc
-} 
+}
 
+//Routes is a type
 type Routes []Route
 
 var routes = Routes{
@@ -24,8 +27,8 @@ var routes = Routes{
 		"/block",
 		Blocks,
 	},
-	Route{ 
-		"POST", 
+	Route{
+		"POST",
 		"/block",
 		NewBlock,
 	},
@@ -39,9 +42,14 @@ var routes = Routes{
 		"/peer",
 		NewPeer,
 	},
+	{
+		"GET",
+		"/ws",
+		WebSocket,
+	},
 }
 
-
+//NewRouter start new router
 func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 
@@ -53,5 +61,5 @@ func NewRouter() *mux.Router {
 	}
 
 	return router
-	
+
 }
