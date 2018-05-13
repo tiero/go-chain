@@ -49,9 +49,6 @@ func NewPeer(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	initialLen := len(node.Peers)
-	log.Println(initialLen)
-	log.Println(len(node.Peers))
-
 	if connectToPeers(node, body.Peers); len(node.Peers) == initialLen {
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte("internal server error"))
@@ -88,7 +85,6 @@ func WebSocket(writer http.ResponseWriter, request *http.Request) {
 			break
 		}
 	}
-
 }
 
 /*
