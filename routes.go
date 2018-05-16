@@ -32,17 +32,17 @@ var routes = Routes{
 		"/block",
 		NewBlock,
 	},
-	{
+	Route{
 		"GET",
 		"/peer",
 		Peer,
 	},
-	{
+	Route{
 		"POST",
 		"/peer",
 		NewPeer,
 	},
-	{
+	Route{
 		"GET",
 		"/ws",
 		WebSocket,
