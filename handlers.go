@@ -73,17 +73,18 @@ func WebSocket(writer http.ResponseWriter, request *http.Request) {
 	}
 	defer c.Close()
 	for {
-		mt, message, err := c.ReadMessage()
+		_, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
+		//log.Printf("recv: %s", message)
+		handleIncomingMessage(c, message)
+		/* err = c.WriteMessage(mt, message)
 		if err != nil {
 			log.Println("write:", err)
 			break
-		}
+		} */
 	}
 }
 
