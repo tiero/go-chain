@@ -45,7 +45,7 @@ var routes = Routes{
 	{
 		"GET",
 		"/ws",
-		WebSocket,
+		WebSocketHandler,
 	},
 }
 

@@ -48,13 +48,10 @@ func NewPeer(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte("Bad request"))
 		return
 	}
-	initialLen := len(node.Peers)
-	if connectToPeers(node, body.Peers); len(node.Peers) == initialLen {
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte("internal server error"))
 
-		return
-	}
+	connected := connectToPeers(node, body.Peers)
+
+	log.Println(connected)
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("new peers!"))
@@ -62,30 +59,16 @@ func NewPeer(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-WebSocket upgrade http to ws for incoming connection
+WebSocketHandler upgrade http to ws for incoming connection
 */
-func WebSocket(writer http.ResponseWriter, request *http.Request) {
-
-	c, err := upgrader.Upgrade(writer, request, nil)
+func WebSocketHandler(writer http.ResponseWriter, request *http.Request) {
+	upgrader.CheckOrigin = func(request *http.Request) bool { return true }
+	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		println(err.Error())
 		return
 	}
-	defer c.Close()
-	for {
-		_, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		//log.Printf("recv: %s", message)
-		handleIncomingMessage(c, message)
-		/* err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		} */
-	}
+	wsListen(node, conn)
 }
 
 /*

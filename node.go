@@ -36,27 +36,55 @@ func NewNode(host string, initialPeers []*websocket.Conn, blocksHeight uint64) *
 	return &Node{host, initialPeers, blocksHeight}
 }
 
-func connectToPeers(node *Node, endpoints []string) {
+func connectToPeers(node *Node, endpoints []string) []string {
+	var connected []string
 	for _, endpoint := range endpoints {
+		//Parse endpoints
+		// TODO move to helper function
 		parsedURL, _ := url.Parse(endpoint)
 		u := url.URL{Scheme: parsedURL.Scheme, Host: parsedURL.Host, Path: "/ws"}
-		log.Printf("connecting to %s", u.String())
-
+		//Start a dialing
 		c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 
-		//mt, message, err1 := c.ReadMessage()
-
 		if err == nil {
-			node.Peers = append(node.Peers, c)
+			go wsListen(node, c)
+			connected = append(connected, endpoint)
+			//c.WriteMessage(websocket.TextMessage, []byte("ciao cazzu"))
 			broadcastMessage(c, &MessagePayload{queryLatestBlock, ""})
 		} else {
 			log.Println(err)
 		}
 	}
+	return connected
+}
+
+func wsListen(node *Node, conn *websocket.Conn) {
+	node.Peers = append(node.Peers, conn)
+	println(conn.RemoteAddr().String() + " Connected")
+	println("Peers: " + fmt.Sprint(len(node.Peers)))
+	for {
+		_, p, err := conn.ReadMessage()
+		if err != nil {
+			println(conn.RemoteAddr().String() + " Disconnected")
+			removePeer(node, conn)
+			println("Peers: " + fmt.Sprint(len(node.Peers)))
+			return
+		}
+		handleIncomingMessage(conn, p)
+	}
+}
+
+func removePeer(node *Node, conn *websocket.Conn) bool {
+	for i, v := range node.Peers {
+		if v == conn {
+			node.Peers = append(node.Peers[:i], node.Peers[i+1:]...)
+			return true
+		}
+	}
+	return false
 }
 
 func broadcastMessage(conn *websocket.Conn, mp *MessagePayload) {
-	log.Println("siamo qua")
 	payload, err := json.Marshal(mp)
 	if err == nil {
 		if err = conn.WriteMessage(websocket.TextMessage, payload); err != nil {
@@ -66,17 +94,24 @@ func broadcastMessage(conn *websocket.Conn, mp *MessagePayload) {
 
 }
 
+func handleResponseBlockchain(message string) {
+	receivedBlockchain := fromJSON(message)
+	println("reveived blocks lenght " + fmt.Sprint(len(receivedBlockchain.blocks)))
+}
+
 func handleIncomingMessage(conn *websocket.Conn, message []byte) {
-	log.Println(message)
 	var payload MessagePayload
 	if err := json.Unmarshal(message, &payload); err == nil {
-		log.Println(payload.MessageType)
-		log.Println(payload.MessageText)
-		broadcastMessage(conn, &MessagePayload{responseBlockchain, fmt.Sprint(latestBlock(blockchain).Index)})
-		/* switch payload.MessageType {
-		case 0:
+		switch int(payload.MessageType) {
+		case queryLatestBlock:
+			//latest block
+			broadcastMessage(conn, &MessagePayload{responseBlockchain, toJSON(blockchain, true)})
+		case queryAllBlock:
+			broadcastMessage(conn, &MessagePayload{responseBlockchain, toJSON(blockchain)})
+		case responseBlockchain:
+			handleResponseBlockchain(payload.MessageText)
+		}
 
-		} */
 	} else {
 		log.Println(err)
 	}
