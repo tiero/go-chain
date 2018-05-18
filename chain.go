@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
 	"time"
 )
 
@@ -45,6 +47,28 @@ func NewBlockchain() *Blockchain {
 	mutex.Lock()
 	defer mutex.Unlock()
 	return &Blockchain{[]*Block{genesisBlock()}}
+}
+
+func toJSON(bc *Blockchain, latestBlockFlag ...bool) string {
+	var blks = bc.blocks
+	//if only latestBlock asked to be encoded
+	if latestBlockFlag[0] {
+		blks = []*Block{bc.blocks[len(bc.blocks)-1]}
+	}
+	encoded, err := json.Marshal(blks)
+	if err != nil {
+		log.Fatal("Cannot encode to JSON ", err)
+	}
+	return string(encoded)
+}
+
+func fromJSON(encoded string) *Blockchain {
+	var bc []*Block
+	err := json.Unmarshal([]byte(encoded), &bc)
+	if err != nil {
+		log.Fatal("Cannot decode to JSON ", err)
+	}
+	return &Blockchain{bc}
 }
 
 func replaceBlockchain(currentBlockchain *Blockchain, newBlockchain *Blockchain) *Blockchain {
