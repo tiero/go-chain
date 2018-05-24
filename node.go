@@ -16,6 +16,14 @@ const (
 	responseBlockchain int = 2
 )
 
+//States
+const (
+	follower  int = 0
+	candidate int = 1
+	leader    int = 2
+	shutdown  int = 3
+)
+
 //MessagePayload struct
 type MessagePayload struct {
 	MessageType int
@@ -25,15 +33,47 @@ type MessagePayload struct {
 // Node represent the current operating daemon
 type Node struct {
 	Host   string
+	State  int
 	Peers  []*websocket.Conn
 	Height uint64
 }
 
+func (n *Node) logState() string {
+	switch n.State {
+	case follower:
+		return "Follower"
+	case candidate:
+		return "Candidate"
+	case leader:
+		return "Leader"
+	case shutdown:
+		return "Shutdown"
+	default:
+		return "Unknown"
+	}
+}
+
 // NewNode starts a p2p server
-func NewNode(host string, initialPeers []*websocket.Conn, blocksHeight uint64) *Node {
+func NewNode(host string, state int, initialPeers []*websocket.Conn, blocksHeight uint64) *Node {
 	mutex.Lock()
 	defer mutex.Unlock()
-	return &Node{host, initialPeers, blocksHeight}
+	return &Node{host, state, initialPeers, blocksHeight}
+}
+
+func appendBlockProposal(n *Node, newTransaction Transaction) {
+
+	nextBlock := generateNextBlock(blockchain, newTransaction)
+
+	if isLeader(n) {
+		blocks := addBlock(blockchain, nextBlock)
+		broadcastMessage(node, &MessagePayload{responseBlockchain, toJSON(&Blockchain{blocks})})
+
+	}
+
+}
+
+func isLeader(n *Node) bool {
+	return n.State == leader
 }
 
 func connectToPeers(n *Node, endpoints []string) {
@@ -106,6 +146,7 @@ func handleResponseBlockchain(n *Node, message string) {
 		log.Println("blockchain possibly behind. We got: " + fmt.Sprint(latestBlockHeld.Index) + " Peer got: " + fmt.Sprint(latestBlockReceived.Index))
 		if latestBlockHeld.Hash == latestBlockReceived.PreviousHash {
 			log.Println("We can safewly append the new block to our chain")
+
 			addBlock(blockchain, latestBlockReceived)
 			broadcastMessage(n, &MessagePayload{responseBlockchain, toJSON(blockchain, true)})
 		} else if receivedBlockchainLenght == 1 {

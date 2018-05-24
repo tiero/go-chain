@@ -20,27 +20,27 @@ var routes = Routes{
 	Route{
 		"GET",
 		"/ping",
-		Ping,
+		PingHandler,
 	},
 	Route{
 		"GET",
 		"/block",
-		Blocks,
+		BlocksHandler,
 	},
 	Route{
 		"POST",
 		"/block",
-		NewBlock,
+		NewBlockHandler,
 	},
 	Route{
 		"GET",
 		"/peer",
-		Peer,
+		PeersHandler,
 	},
 	Route{
 		"POST",
 		"/peer",
-		NewPeer,
+		NewPeerHandler,
 	},
 	Route{
 		"GET",

@@ -17,10 +17,10 @@ type peerBody struct {
 }
 
 /*
-Peer Get a list of connected peers
+PeersHandler Get a list of connected peers
 curl -X GET http://localhost:3000/peer
 */
-func Peer(writer http.ResponseWriter, request *http.Request) {
+func PeersHandler(writer http.ResponseWriter, request *http.Request) {
 	addrs := filterEndpointsFromConnections(node.Peers)
 	response, err := json.MarshalIndent(addrs, "", "  ")
 	//Catch the error
@@ -35,9 +35,9 @@ func Peer(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-NewPeer Add an array of peers with the JSON format { "Peers":["ws://localhost:4000"] }
+NewPeerHandler Add an array of peers with the JSON format { "Peers":["ws://localhost:4000"] }
 */
-func NewPeer(writer http.ResponseWriter, request *http.Request) {
+func NewPeerHandler(writer http.ResponseWriter, request *http.Request) {
 	decoder := json.NewDecoder(request.Body)
 
 	var body peerBody
@@ -70,7 +70,7 @@ func WebSocketHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-NewBlock is a test-only endpoint used for development. Do not use in production!
+NewBlockHandler is a test-only endpoint used for development. Do not use in production!
 curl -X POST http://localhost:3000/block -H 'Content-Type: application/json' \
 -d '{
       "Value":100000000,
@@ -78,7 +78,7 @@ curl -X POST http://localhost:3000/block -H 'Content-Type: application/json' \
       "Output": "@tiero"
 }'
 */
-func NewBlock(writer http.ResponseWriter, request *http.Request) {
+func NewBlockHandler(writer http.ResponseWriter, request *http.Request) {
 	decoder := json.NewDecoder(request.Body)
 
 	var newTransaction Transaction
@@ -94,15 +94,16 @@ func NewBlock(writer http.ResponseWriter, request *http.Request) {
 	nextBlock := generateNextBlock(blockchain, newTransaction)
 	blocks := addBlock(blockchain, nextBlock)
 	broadcastMessage(node, &MessagePayload{responseBlockchain, toJSON(&Blockchain{blocks})})
+
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("new block mined! Block Hash: " + nextBlock.Hash))
 }
 
 /*
-Blocks is used to get the whole list of blocks or a specific one
+BlocksHandler is used to get the whole list of blocks or a specific one
 curl -X GET http://localhost:3000/block
 */
-func Blocks(writer http.ResponseWriter, request *http.Request) {
+func BlocksHandler(writer http.ResponseWriter, request *http.Request) {
 	response, err := json.MarshalIndent(blockchain.blocks, "", "  ")
 	//Catch the error
 	if err != nil {
@@ -115,10 +116,10 @@ func Blocks(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-Ping ... Pong!
+PingHandler Pong!
 curl -X GET http://localhost:3000/ping
 */
-func Ping(writer http.ResponseWriter, request *http.Request) {
+func PingHandler(writer http.ResponseWriter, request *http.Request) {
 	//Pong
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("Pong!"))

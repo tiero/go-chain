@@ -81,7 +81,7 @@ curl -X POST \
   http://localhost:3000/block \
   -H 'Cache-Control: no-cache' \
   -H 'Content-Type: application/json' \
-  -d '{ "Value":100000000, "Input":"coinbase", "Output": "@tiero" }'
+  -d '{ "Value":100000000, "Input":"@tiero", "Output": "@bob" }'
 ```
 
 
