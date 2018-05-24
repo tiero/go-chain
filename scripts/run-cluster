@@ -1,0 +1,18 @@
+#!/bin/sh
+trap : SIGTERM SIGINT
+echo $$
+
+HTTP_PORT=8000 $GOPATH/bin/go-chain &
+P1=$!
+HTTP_PORT=9000 $GOPATH/bin/go-chain &
+P2=$!
+HTTP_PORT=9090 $GOPATH/bin/go-chain &
+P3=$!
+
+wait $P1 $P2 $P3
+
+if [[ $? -gt 128 ]]
+then
+    kill $P1 $P2 $P3
+fi
+
