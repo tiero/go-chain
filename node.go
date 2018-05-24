@@ -36,8 +36,7 @@ func NewNode(host string, initialPeers []*websocket.Conn, blocksHeight uint64) *
 	return &Node{host, initialPeers, blocksHeight}
 }
 
-func connectToPeers(node *Node, endpoints []string) []string {
-	var connected []string
+func connectToPeers(n *Node, endpoints []string) {
 	for _, endpoint := range endpoints {
 		//Parse endpoints
 		// TODO move to helper function
@@ -47,30 +46,27 @@ func connectToPeers(node *Node, endpoints []string) []string {
 		c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 
 		if err == nil {
-			go wsListen(node, c)
-			connected = append(connected, endpoint)
-			//c.WriteMessage(websocket.TextMessage, []byte("ciao cazzu"))
-			broadcastMessage(c, &MessagePayload{queryLatestBlock, ""})
+			go wsListen(n, c)
+			broadcastMessage(n, &MessagePayload{queryLatestBlock, ""})
 		} else {
 			log.Println(err)
 		}
 	}
-	return connected
 }
 
-func wsListen(node *Node, conn *websocket.Conn) {
-	node.Peers = append(node.Peers, conn)
+func wsListen(n *Node, conn *websocket.Conn) {
+	n.Peers = append(n.Peers, conn)
 	println(conn.RemoteAddr().String() + " Connected")
-	println("Peers: " + fmt.Sprint(len(node.Peers)))
+	println("Peers: " + fmt.Sprint(len(n.Peers)))
 	for {
 		_, p, err := conn.ReadMessage()
 		if err != nil {
 			println(conn.RemoteAddr().String() + " Disconnected")
-			removePeer(node, conn)
-			println("Peers: " + fmt.Sprint(len(node.Peers)))
+			removePeer(n, conn)
+			println("Peers: " + fmt.Sprint(len(n.Peers)))
 			return
 		}
-		handleIncomingMessage(conn, p)
+		handleIncomingMessage(n, p)
 	}
 }
 
@@ -84,32 +80,59 @@ func removePeer(node *Node, conn *websocket.Conn) bool {
 	return false
 }
 
-func broadcastMessage(conn *websocket.Conn, mp *MessagePayload) {
-	payload, err := json.Marshal(mp)
-	if err == nil {
-		if err = conn.WriteMessage(websocket.TextMessage, payload); err != nil {
-			return
+func broadcastMessage(n *Node, mp *MessagePayload) {
+	for _, connection := range n.Peers {
+		payload, err := json.Marshal(mp)
+		if err == nil {
+			if err = connection.WriteMessage(websocket.TextMessage, payload); err != nil {
+				return
+			}
 		}
+	}
+}
+
+func handleResponseBlockchain(n *Node, message string) {
+	receivedBlockchain := fromJSON(message)
+	receivedBlockchainLenght := len(receivedBlockchain.blocks)
+	println(n.Host)
+	//Sort by block index
+	/* sort.Slice(receivedBlockchain, func(i, j int) bool {
+		return receivedBlockchain.blocks[i].Index < receivedBlockchain.blocks[j].Index
+	}) */
+	latestBlockReceived := receivedBlockchain.blocks[receivedBlockchainLenght-1]
+	latestBlockHeld := latestBlock(blockchain)
+
+	if latestBlockReceived.Index > latestBlockHeld.Index {
+		log.Println("blockchain possibly behind. We got: " + fmt.Sprint(latestBlockHeld.Index) + " Peer got: " + fmt.Sprint(latestBlockReceived.Index))
+		if latestBlockHeld.Hash == latestBlockReceived.PreviousHash {
+			log.Println("We can safewly append the new block to our chain")
+			addBlock(blockchain, latestBlockReceived)
+			broadcastMessage(n, &MessagePayload{responseBlockchain, toJSON(blockchain, true)})
+		} else if receivedBlockchainLenght == 1 {
+			//In this case we should check if we are at genesis block
+			log.Println("We have to query the chain from our peer")
+			broadcastMessage(n, &MessagePayload{queryAllBlock, ""})
+		} else {
+			log.Println("Received blockchain is longer than current blockchain")
+			replaceBlockchain(blockchain, receivedBlockchain)
+		}
+	} else {
+		log.Println("Received blockchain is not longer than received blockchain. Do nothing")
 	}
 
 }
 
-func handleResponseBlockchain(message string) {
-	receivedBlockchain := fromJSON(message)
-	println("reveived blocks lenght " + fmt.Sprint(len(receivedBlockchain.blocks)))
-}
-
-func handleIncomingMessage(conn *websocket.Conn, message []byte) {
+func handleIncomingMessage(n *Node, message []byte) {
 	var payload MessagePayload
 	if err := json.Unmarshal(message, &payload); err == nil {
 		switch int(payload.MessageType) {
 		case queryLatestBlock:
 			//latest block
-			broadcastMessage(conn, &MessagePayload{responseBlockchain, toJSON(blockchain, true)})
+			broadcastMessage(n, &MessagePayload{responseBlockchain, toJSON(blockchain, true)})
 		case queryAllBlock:
-			broadcastMessage(conn, &MessagePayload{responseBlockchain, toJSON(blockchain)})
+			broadcastMessage(n, &MessagePayload{responseBlockchain, toJSON(blockchain)})
 		case responseBlockchain:
-			handleResponseBlockchain(payload.MessageText)
+			handleResponseBlockchain(n, payload.MessageText)
 		}
 
 	} else {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -22,7 +21,8 @@ Peer Get a list of connected peers
 curl -X GET http://localhost:3000/peer
 */
 func Peer(writer http.ResponseWriter, request *http.Request) {
-	response, err := json.MarshalIndent(node.Peers, "", "  ")
+	addrs := filterEndpointsFromConnections(node.Peers)
+	response, err := json.MarshalIndent(addrs, "", "  ")
 	//Catch the error
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -49,9 +49,7 @@ func NewPeer(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	connected := connectToPeers(node, body.Peers)
-
-	log.Println(connected)
+	connectToPeers(node, body.Peers)
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("new peers!"))
@@ -94,8 +92,8 @@ func NewBlock(writer http.ResponseWriter, request *http.Request) {
 
 	//Add the next block using goroutine
 	nextBlock := generateNextBlock(blockchain, newTransaction)
-	go addBlock(blockchain, nextBlock)
-
+	blocks := addBlock(blockchain, nextBlock)
+	broadcastMessage(node, &MessagePayload{responseBlockchain, toJSON(&Blockchain{blocks})})
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("new block mined! Block Hash: " + nextBlock.Hash))
 }

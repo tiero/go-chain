@@ -52,7 +52,7 @@ func NewBlockchain() *Blockchain {
 func toJSON(bc *Blockchain, latestBlockFlag ...bool) string {
 	var blks = bc.blocks
 	//if only latestBlock asked to be encoded
-	if latestBlockFlag[0] {
+	if latestBlockFlag != nil && latestBlockFlag[0] {
 		blks = []*Block{bc.blocks[len(bc.blocks)-1]}
 	}
 	encoded, err := json.Marshal(blks)
@@ -78,12 +78,11 @@ func replaceBlockchain(currentBlockchain *Blockchain, newBlockchain *Blockchain)
 	return currentBlockchain
 }
 
-func addBlock(bc *Blockchain, nextBlock *Block) {
+func addBlock(bc *Blockchain, nextBlock *Block) []*Block {
 	if isValidBlock(nextBlock, latestBlock(bc)) {
-		mutex.Lock()
-		defer mutex.Unlock()
 		bc.blocks = append(bc.blocks, nextBlock)
 	}
+	return bc.blocks
 }
 
 func generateNextBlock(bc *Blockchain, data Transaction) *Block {

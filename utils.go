@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/gorilla/websocket"
 )
 
 func calculateHash(index uint64, prevHash string, data Transaction, timestamp uint64) string {
@@ -18,4 +20,12 @@ func calculateHash(index uint64, prevHash string, data Transaction, timestamp ui
 
 func calculateHashForBlock(block *Block) string {
 	return calculateHash(block.Index, block.PreviousHash, block.Data, block.Timestamp)
+}
+
+func filterEndpointsFromConnections(connections []*websocket.Conn) (endpoints []string) {
+	endpoints = make([]string, len(connections))
+	for i, p := range connections {
+		endpoints[i] = p.RemoteAddr().String()
+	}
+	return endpoints
 }
