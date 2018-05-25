@@ -90,13 +90,18 @@ func NewBlockHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	//Add the next block using goroutine
 	nextBlock := generateNextBlock(blockchain, newTransaction)
-	blocks := addBlock(blockchain, nextBlock)
-	broadcastMessage(node, &MessagePayload{responseBlockchain, toJSON(&Blockchain{blocks})})
+	hasBeenAppended := appendBlockProposal(node, nextBlock)
 
-	writer.WriteHeader(http.StatusOK)
-	writer.Write([]byte("new block mined! Block Hash: " + nextBlock.Hash))
+	if hasBeenAppended {
+		writer.WriteHeader(http.StatusOK)
+		writer.Write([]byte("new block proposal appended!"))
+	} else {
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("This is not the leader node. Send the request to : "))
+		return
+	}
+
 }
 
 /*

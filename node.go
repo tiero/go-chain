@@ -60,16 +60,14 @@ func NewNode(host string, state int, initialPeers []*websocket.Conn, blocksHeigh
 	return &Node{host, state, initialPeers, blocksHeight}
 }
 
-func appendBlockProposal(n *Node, newTransaction Transaction) {
-
-	nextBlock := generateNextBlock(blockchain, newTransaction)
+func appendBlockProposal(n *Node, nextBlock *Block) bool {
 
 	if isLeader(n) {
 		blocks := addBlock(blockchain, nextBlock)
 		broadcastMessage(node, &MessagePayload{responseBlockchain, toJSON(&Blockchain{blocks})})
-
 	}
 
+	return isLeader(n)
 }
 
 func isLeader(n *Node) bool {
@@ -135,18 +133,13 @@ func handleResponseBlockchain(n *Node, message string) {
 	receivedBlockchain := fromJSON(message)
 	receivedBlockchainLenght := len(receivedBlockchain.blocks)
 	println(n.Host)
-	//Sort by block index
-	/* sort.Slice(receivedBlockchain, func(i, j int) bool {
-		return receivedBlockchain.blocks[i].Index < receivedBlockchain.blocks[j].Index
-	}) */
 	latestBlockReceived := receivedBlockchain.blocks[receivedBlockchainLenght-1]
 	latestBlockHeld := latestBlock(blockchain)
 
 	if latestBlockReceived.Index > latestBlockHeld.Index {
 		log.Println("blockchain possibly behind. We got: " + fmt.Sprint(latestBlockHeld.Index) + " Peer got: " + fmt.Sprint(latestBlockReceived.Index))
 		if latestBlockHeld.Hash == latestBlockReceived.PreviousHash {
-			log.Println("We can safewly append the new block to our chain")
-
+			log.Println("We can safely append the new block to our chain")
 			addBlock(blockchain, latestBlockReceived)
 			broadcastMessage(n, &MessagePayload{responseBlockchain, toJSON(blockchain, true)})
 		} else if receivedBlockchainLenght == 1 {
