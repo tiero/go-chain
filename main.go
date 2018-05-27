@@ -29,6 +29,7 @@ func main() {
 	//Starting the blockchain from hardcoded genesis block
 	blockchain = NewBlockchain()
 	node = NewNode(Host(), follower, []*websocket.Conn{}, latestBlock(blockchain).Index)
+
 	//Mux Router
 	router := NewRouter()
 	// Bind to a port and pass our router in

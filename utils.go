@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	"github.com/gorilla/websocket"
 )
@@ -28,4 +29,18 @@ func filterEndpointsFromConnections(connections []*websocket.Conn) (endpoints []
 		endpoints[i] = p.RemoteAddr().String()
 	}
 	return endpoints
+}
+
+func filterConnectionFromEndpoint(connections []*websocket.Conn, endpoint string) *websocket.Conn {
+	conn := &websocket.Conn{}
+	for _, c := range connections {
+		log.Println("========")
+		log.Println(c.RemoteAddr().String())
+		log.Println(endpoint)
+		log.Println("========")
+		if c.RemoteAddr().String() == endpoint {
+			conn = c
+		}
+	}
+	return conn
 }
