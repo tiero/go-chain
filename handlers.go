@@ -21,8 +21,8 @@ PeersHandler Get a list of connected peers
 curl -X GET http://localhost:3000/peer
 */
 func PeersHandler(writer http.ResponseWriter, request *http.Request) {
-	addrs := filterEndpointsFromConnections(node.Peers)
-	response, err := json.MarshalIndent(addrs, "", "  ")
+
+	response, err := json.MarshalIndent(node.Peers, "", "  ")
 	//Catch the error
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -49,6 +49,7 @@ func NewPeerHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	node.setState(candidate)
 	connectToPeers(node, body.Peers)
 
 	writer.WriteHeader(http.StatusOK)

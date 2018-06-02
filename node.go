@@ -38,12 +38,13 @@ type MessagePayload struct {
 
 // Node represent the current operating daemon
 type Node struct {
-	Host   string
-	Term   int
-	State  int
-	Peers  []*websocket.Conn
-	Leader string
-	Height uint64
+	ID      string
+	Address string
+	Term    int
+	State   int
+	Peers   map[string]*websocket.Conn
+	Leader  string
+	Height  uint64
 }
 
 func (n *Node) logState() string {
@@ -62,22 +63,24 @@ func (n *Node) logState() string {
 }
 
 // NewNode starts a p2p server
-func NewNode(host string, state int, initialPeers []*websocket.Conn, blocksHeight uint64) *Node {
+func NewNode(id, host string, state int, blocksHeight uint64) *Node {
 	mutex.Lock()
 	defer mutex.Unlock()
-	return &Node{host, 0, state, initialPeers, "", blocksHeight}
-}
-
-func (n *Node) startTimer() {
-	broadcastMessage(n, &MessagePayload{n.Host, n.State, heartbeatPing, ""})
+	return &Node{id, host, 0, state, map[string]*websocket.Conn{}, "", blocksHeight}
 }
 
 func appendBlockProposal(n *Node, nextBlock *Block) bool {
 
+	//NOTICE Only for dev purpose, remove it
+	//TODO Create an election mechanism to handle leader-follower writes
+	if n.State != leader {
+		n.setState(leader)
+	}
+	//Actual check
 	if n.isLeader() {
 		blocks := addBlock(blockchain, nextBlock)
 		n.Height = nextBlock.Index
-		broadcastMessage(node, &MessagePayload{n.Host, n.State, responseBlockchain, toJSON(&Blockchain{blocks})})
+		broadcastMessage(node, &MessagePayload{n.Address, n.State, responseBlockchain, toJSON(&Blockchain{blockchain.currentTerm, blockchain.votedFor, blocks})})
 	}
 
 	return n.isLeader()
@@ -91,15 +94,8 @@ func (n *Node) setState(nextState int) {
 	n.State = nextState
 }
 
-func (n *Node) setLeader(nextLeader string) {
-	if !n.isLeader() {
-		n.Leader = nextLeader
-		n.setState(leader)
-	}
-}
-
 func connectToPeers(n *Node, endpoints []string) {
-	n.setLeader(n.Host)
+
 	for _, endpoint := range endpoints {
 		//Parse endpoints
 		// TODO move to helper function
@@ -110,8 +106,7 @@ func connectToPeers(n *Node, endpoints []string) {
 
 		if err == nil {
 			go wsListen(n, c)
-			broadcastMessage(n, &MessagePayload{n.Host, n.State, queryLatestBlock, ""})
-			n.startTimer()
+			broadcastMessage(n, &MessagePayload{n.Address, n.State, queryLatestBlock, ""})
 		} else {
 			log.Println(err)
 		}
@@ -119,7 +114,7 @@ func connectToPeers(n *Node, endpoints []string) {
 }
 
 func wsListen(n *Node, conn *websocket.Conn) {
-	n.Peers = append(n.Peers, conn)
+	n.Peers[n.Address] = conn
 	println(conn.RemoteAddr().String() + " Connected")
 	println("Peers: " + fmt.Sprint(len(n.Peers)))
 	for {
@@ -134,12 +129,11 @@ func wsListen(n *Node, conn *websocket.Conn) {
 	}
 }
 
-func removePeer(node *Node, conn *websocket.Conn) bool {
-	for i, v := range node.Peers {
-		if v == conn {
-			node.Peers = append(node.Peers[:i], node.Peers[i+1:]...)
-			return true
-		}
+func removePeer(n *Node, conn *websocket.Conn) bool {
+	_, ok := n.Peers[n.Address]
+	if ok {
+		delete(n.Peers, n.Address)
+		return true
 	}
 	return false
 }
@@ -168,18 +162,18 @@ func handleResponseBlockchain(n *Node, message string) {
 			//broadcastMessage(n, &MessagePayload{node.State, responseAck, ""})
 			addBlock(blockchain, latestBlockReceived)
 			n.Height = latestBlockReceived.Index
-			broadcastMessage(n, &MessagePayload{n.Host, n.State, responseBlockchain, toJSON(blockchain, true)})
+			broadcastMessage(n, &MessagePayload{n.Address, n.State, responseBlockchain, toJSON(blockchain, true)})
 		} else if receivedBlockchainLenght == 1 {
 			//In this case we should check if we are at genesis block
 			log.Println("We have to query the chain from our peer")
-			broadcastMessage(n, &MessagePayload{n.Host, n.State, queryAllBlock, ""})
+			broadcastMessage(n, &MessagePayload{n.Address, n.State, queryAllBlock, ""})
 		} else {
 			log.Println("Received blockchain is longer than current blockchain")
 			blockchain = replaceBlockchain(blockchain, receivedBlockchain)
 			n.Height = latestBlock(receivedBlockchain).Index
 		}
 	} else {
-		log.Println("Received blockchain is not longer than received blockchain. Do nothing")
+		log.Println("Received blockchain is not longer than current blockchain. Do nothing")
 	}
 
 }
@@ -198,7 +192,6 @@ func handleQueryState(n *Node, mp MessagePayload) {
 func handleHeartbeatPing(n *Node, mp MessagePayload) {
 	//filterConnectionFromEndpoint(n.Peers, mp.SenderHost)
 	if mp.SenderState == leader {
-		//al good
 		//do nothing
 	}
 }
@@ -209,11 +202,11 @@ func handleIncomingMessage(n *Node, message []byte) {
 		switch int(payload.MessageType) {
 		case queryState:
 			handleQueryState(n, payload)
-			//broadcastMessage(n, &MessagePayload{n.Host, n.State, queryLatestBlock, ""})
+			//broadcastMessage(n, &MessagePayload{n.Address, n.State, queryLatestBlock, ""})
 		case queryLatestBlock:
-			broadcastMessage(n, &MessagePayload{n.Host, n.State, responseBlockchain, toJSON(blockchain, true)})
+			broadcastMessage(n, &MessagePayload{n.Address, n.State, responseBlockchain, toJSON(blockchain, true)})
 		case queryAllBlock:
-			broadcastMessage(n, &MessagePayload{n.Host, n.State, responseBlockchain, toJSON(blockchain)})
+			broadcastMessage(n, &MessagePayload{n.Address, n.State, responseBlockchain, toJSON(blockchain)})
 		case responseBlockchain:
 			handleResponseBlockchain(n, payload.MessageText)
 		case responseAck:

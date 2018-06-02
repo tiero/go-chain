@@ -28,7 +28,9 @@ type Block struct {
 
 //Blockchain data model
 type Blockchain struct {
-	blocks []*Block
+	currentTerm uint64
+	votedFor    string
+	blocks      []*Block
 }
 
 func genesisBlock() *Block {
@@ -46,7 +48,7 @@ func genesisBlock() *Block {
 func NewBlockchain() *Blockchain {
 	mutex.Lock()
 	defer mutex.Unlock()
-	return &Blockchain{[]*Block{genesisBlock()}}
+	return &Blockchain{0, "", []*Block{genesisBlock()}}
 }
 
 func toJSON(bc *Blockchain, latestBlockFlag ...bool) string {
@@ -68,7 +70,7 @@ func fromJSON(encoded string) *Blockchain {
 	if err != nil {
 		log.Fatal("Cannot decode to JSON ", err)
 	}
-	return &Blockchain{bc}
+	return &Blockchain{0, "", bc}
 }
 
 func replaceBlockchain(currentBlockchain *Blockchain, newBlockchain *Blockchain) *Blockchain {

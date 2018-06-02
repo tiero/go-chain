@@ -23,12 +23,20 @@ func calculateHashForBlock(block *Block) string {
 	return calculateHash(block.Index, block.PreviousHash, block.Data, block.Timestamp)
 }
 
-func filterEndpointsFromConnections(connections []*websocket.Conn) (endpoints []string) {
-	endpoints = make([]string, len(connections))
-	for i, p := range connections {
-		endpoints[i] = p.RemoteAddr().String()
+func filterEndpointsFromConnections(connections map[string]*websocket.Conn) (endpoints []string) {
+	keys := make([]string, len(connections))
+
+	i := 0
+	for k := range connections {
+		log.Println("∆========")
+		println(k)
+		println(connections[k].RemoteAddr().String())
+		log.Println("========")
+		keys[i] = k
+		i++
 	}
-	return endpoints
+
+	return keys
 }
 
 func filterConnectionFromEndpoint(connections []*websocket.Conn, endpoint string) *websocket.Conn {
