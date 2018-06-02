@@ -1,5 +1,8 @@
 # go-chain
-Simple blockchain in Go
+Permissioned Blockchain using [Raft](https://raft.github.io) consensus
+
+Written in Go
+
 
 # Build
 
@@ -23,19 +26,19 @@ go install
 Run the first node on port **3000**
 
 ```
-HTTP_PORT="3000" $GOPATH/bin/go-chain
+$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000
 ```
 
 Run the second node on port **4000**
 
 ```
-HTTP_PORT="4000" $GOPATH/bin/go-chain
+$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000
 ```
 
 ## Cluster
 
 Alternatively you can run a cluster launching the `run-cluster` bash script in  `scripts` folder
-Change manually from the script the port and the number of nodes. Default: 3000, 4000, 5000
+Change manually from the script the port and the number of nodes. Default tre nodes at ports: 3000, 4000, 5000
 
 ```
 sh scripts/run-cluster
