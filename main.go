@@ -23,7 +23,7 @@ func main() {
 	if *id != "" && *host != "" && *port != "" {
 		serverAddress := *host + ":" + *port
 		//Starting the blockchain from hardcoded genesis block
-		blockchain = NewBlockchain()
+		//blockchain = NewBlockchain()
 		node = NewNode(*id, serverAddress, follower, latestBlock(blockchain).Index)
 
 		//Mux Router

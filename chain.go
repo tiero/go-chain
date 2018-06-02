@@ -6,44 +6,6 @@ import (
 	"time"
 )
 
-// TODO Add scriptSig
-// TODO Add real UTXOs (multiple outs, ins)
-
-//Transaction data model
-type Transaction struct {
-	Value  uint64
-	Input  string
-	Output string
-}
-
-//Block data model
-// blocksize: 1 transaction per block
-type Block struct {
-	Index        uint64
-	Hash         string
-	PreviousHash string
-	Data         Transaction
-	Timestamp    uint64
-}
-
-//Blockchain data model
-type Blockchain struct {
-	currentTerm uint64
-	votedFor    string
-	blocks      []*Block
-}
-
-func genesisBlock() *Block {
-
-	txData := Transaction{
-		BlockRewardValue(),
-		CoinbaseInput,
-		"@tiero",
-	}
-
-	return &Block{0, GenesisBlockHash, "0", txData, GenesisTimestamp}
-}
-
 //NewBlockchain append the genesis block
 func NewBlockchain() *Blockchain {
 	mutex.Lock()
@@ -126,9 +88,4 @@ func isValidChain(newBlockchain *Blockchain) bool {
 	}
 
 	return true
-}
-
-//BlockRewardValue returns the next BlockReward
-func BlockRewardValue() uint64 {
-	return InitialBlockReward
 }
