@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"net/http"
 
@@ -63,3 +64,4 @@ func NewRouter() *mux.Router {
 	return router
 
 }
+*/

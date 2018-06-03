@@ -1,5 +1,7 @@
 package main
 
+/* package main
+
 import (
 	"encoding/json"
 	"log"
@@ -89,3 +91,4 @@ func isValidChain(newBlockchain *Blockchain) bool {
 
 	return true
 }
+*/

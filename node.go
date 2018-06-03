@@ -34,3 +34,27 @@ type Node struct {
 func NewNode(id *NodeIDType, address *AddressType) *Node {
 	return &Node{id, follower, &LeaderType{}, address, &Blockchain{0, nil, []*Block{genesisBlock()}}, 0}
 }
+
+//AppendBlock is invoked by leader to replicate blocks; also used as heartbeat
+func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, blockHeight uint64, blockTerm int, blocks []*Block, leaderBlockHeight uint64) (int, bool) {
+	//TODO
+	if leaderTerm < n.Blockchain.currentTerm {
+		return n.Blockchain.currentTerm, false
+	}
+
+	println("Sending request for mandatory replication")
+	println(n.Blockchain.currentTerm)
+	println(n.ID)
+	println(n.Blockchain.currentTerm - 1)
+	println(n.BlockHeight)
+	println([]*Block{})
+	println("nextBlock Height")
+
+	return 0, true
+
+}
+
+//RequestVote is invoked by candidates to gather votes
+func (n *Node) RequestVote() {
+	println("Sending request for gather vote")
+}

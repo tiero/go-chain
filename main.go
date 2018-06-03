@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"net/http"
 	"sync"
 )
 
@@ -21,15 +20,16 @@ func main() {
 	flag.Parse()
 
 	if *id != "" && *host != "" && *port != "" {
-		serverAddress := *host + ":" + *port
+		nodeID := NodeIDType(*id)
+		serverAddress := AddressType(*host + ":" + *port)
 		//Starting the blockchain from hardcoded genesis block
 		//blockchain = NewBlockchain()
-		node = NewNode(*id, serverAddress, follower, latestBlock(blockchain).Index)
+		node = NewNode(&nodeID, &serverAddress)
 
 		//Mux Router
-		router := NewRouter()
+		//router := NewRouter()
 		// Bind to a port and pass our router in
-		log.Fatal(http.ListenAndServe(serverAddress, router))
+		//log.Fatal(http.ListenAndServe(string(serverAddress), router))
 	} else {
 		log.Fatal("Error: Provide --host, --port and --id")
 	}

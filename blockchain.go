@@ -12,6 +12,7 @@ type Transaction struct {
 //Block data model | blocksize: 1 transaction per block
 type Block struct {
 	Index        uint64
+	Term         int
 	Hash         string
 	PreviousHash string
 	Data         Transaction
@@ -33,7 +34,7 @@ func genesisBlock() *Block {
 		"@tiero",
 	}
 
-	return &Block{0, GenesisBlockHash, "0", txData, GenesisTimestamp}
+	return &Block{0, 1, GenesisBlockHash, "0", txData, GenesisTimestamp}
 }
 
 //BlockRewardValue returns the next BlockReward
