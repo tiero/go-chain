@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"sync"
 )
 
@@ -27,9 +28,9 @@ func main() {
 		node = NewNode(&nodeID, &serverAddress)
 
 		//Mux Router
-		//router := NewRouter()
+		router := NewRouter()
 		// Bind to a port and pass our router in
-		//log.Fatal(http.ListenAndServe(string(serverAddress), router))
+		log.Fatal(http.ListenAndServe(string(serverAddress), router))
 	} else {
 		log.Fatal("Error: Provide --host, --port and --id")
 	}

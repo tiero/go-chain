@@ -48,27 +48,6 @@ If you close the process with `Ctrl + C`, the script will terminate the opened p
 
 # Usage
 
-
-
-## Peers
-
-Get current peers connected 
-
-```
-curl -X GET http://localhost:3000/peer 
-```
-
-Add other nodes to the first node as a peer
-
-```
-curl -X POST \
-  http://localhost:3000/peer \
-  -H 'Cache-Control: no-cache' \
-  -H 'Content-Type: application/json' \
-  -d '{ "Peers":["ws://localhost:4000", "ws://localhost:5000"]}'
-```
-
-
 ## Block
 
 Get list of blocks

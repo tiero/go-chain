@@ -1,11 +1,30 @@
 package main
 
-/*
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
+
+//Handlers
+func pingHandler(writer http.ResponseWriter, request *http.Request) {
+	//Pong
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte("Pong!"))
+}
+
+func blocksHandler(writer http.ResponseWriter, request *http.Request) {
+	response, err := json.MarshalIndent(node.Blockchain.blocks, "", "  ")
+	//Catch the error
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Internal Server Error"))
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte(response))
+}
 
 //Route is a type
 type Route struct {
@@ -21,33 +40,35 @@ var routes = Routes{
 	Route{
 		"GET",
 		"/ping",
-		PingHandler,
+		pingHandler,
 	},
 	Route{
 		"GET",
 		"/block",
-		BlocksHandler,
+		blocksHandler,
 	},
-	Route{
-		"POST",
-		"/block",
-		NewBlockHandler,
-	},
-	Route{
-		"GET",
-		"/peer",
-		PeersHandler,
-	},
-	Route{
-		"POST",
-		"/peer",
-		NewPeerHandler,
-	},
-	Route{
-		"GET",
-		"/ws",
-		WebSocketHandler,
-	},
+
+	/*
+		Route{
+			"POST",
+			"/block",
+			NewBlockHandler,
+		},
+		Route{
+			"GET",
+			"/peer",
+			PeersHandler,
+		},
+		Route{
+			"POST",
+			"/peer",
+			NewPeerHandler,
+		},
+		Route{
+			"GET",
+			"/ws",
+			WebSocketHandler,
+		}, */
 }
 
 //NewRouter start new router
@@ -64,4 +85,3 @@ func NewRouter() *mux.Router {
 	return router
 
 }
-*/
