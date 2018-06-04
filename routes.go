@@ -26,6 +26,25 @@ func blocksHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte(response))
 }
 
+func addPeersHandler(writer http.ResponseWriter, request *http.Request) {
+	decoder := json.NewDecoder(request.Body)
+
+	var body peerBody
+	err := decoder.Decode(&body)
+
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Bad request"))
+		return
+	}
+
+	//Add peers
+	//TODO
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte("new peers!"))
+}
+
 //Route is a type
 type Route struct {
 	Method  string
@@ -46,6 +65,11 @@ var routes = Routes{
 		"GET",
 		"/block",
 		blocksHandler,
+	},
+	Route{
+		"POST",
+		"/peer",
+		addPeersHandler,
 	},
 
 	/*
