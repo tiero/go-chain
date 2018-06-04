@@ -1,38 +1,27 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
-	"sync"
 )
 
 var blockchain *Blockchain
 var node *Node
-var mutex sync.Mutex
 
 func main() {
 
-	//Flag Commannds
-	//TODO move away
-	host := flag.String("host", "", "remote host")
-	port := flag.String("port", "", "Port")
-	id := flag.String("id", "", "Port")
-	flag.Parse()
+	config := generateConfigFromFlags()
 
-	if *id != "" && *host != "" && *port != "" {
-		nodeID := NodeIDType(*id)
-		serverAddress := AddressType(*host + ":" + *port)
+	if config.isValid() {
 		//Starting the blockchain from hardcoded genesis block
 		//blockchain = NewBlockchain()
-		node = NewNode(&nodeID, &serverAddress)
-
+		node = NewNode(config)
 		//Mux Router
 		router := NewRouter()
 		// Bind to a port and pass our router in
-		log.Fatal(http.ListenAndServe(string(serverAddress), router))
+		log.Fatal(http.ListenAndServe(string(config.Address), router))
 	} else {
-		log.Fatal("Error: Provide --host, --port and --id")
+		log.Panic("Error: Provide --host, --port and --id")
 	}
 
 }

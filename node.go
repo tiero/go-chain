@@ -1,11 +1,5 @@
 package main
 
-//NodeIDType  string
-type NodeIDType string
-
-//AddressType string
-type AddressType string
-
 //LeaderType struct
 type LeaderType struct {
 	nextHeight  map[string]uint64
@@ -22,17 +16,16 @@ const (
 
 // Node represent the current operating daemon
 type Node struct {
-	ID          *NodeIDType
+	Config      Config
 	State       int
-	Leader      *LeaderType
-	Address     *AddressType
+	Leader      LeaderType
 	Blockchain  *Blockchain
 	BlockHeight uint64
 }
 
 //NewNode creates a new node in the network initialized with hardcoded genesisBlock
-func NewNode(id *NodeIDType, address *AddressType) *Node {
-	return &Node{id, follower, &LeaderType{}, address, &Blockchain{0, nil, []*Block{genesisBlock()}}, 0}
+func NewNode(config Config) *Node {
+	return &Node{config, follower, LeaderType{}, &Blockchain{0, nil, []*Block{genesisBlock()}}, 0}
 }
 
 //AppendBlock is invoked by leader to replicate blocks; also used as heartbeat
@@ -44,7 +37,7 @@ func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, blockHeight uint
 
 	println("Sending request for mandatory replication")
 	println(n.Blockchain.currentTerm)
-	println(n.ID)
+	println(n.Config.ID)
 	println(n.Blockchain.currentTerm - 1)
 	println(n.BlockHeight)
 	println([]*Block{})

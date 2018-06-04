@@ -2,11 +2,11 @@
 trap : SIGTERM SIGINT
 echo $$
 
-$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000 &
+$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000 --peers=127.0.0.1:4000,127.0.0.1:5000  &
 P1=$!
-$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000 &
+$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000 --peers=127.0.0.1:3000,127.0.0.1:5000 &
 P2=$!
-$GOPATH/bin/go-chain --id=@bob  --host=127.0.0.1 --port=5000 &
+$GOPATH/bin/go-chain --id=@bob  --host=127.0.0.1 --port=5000 --peers=127.0.0.1:3000,127.0.0.1:4000 &
 P3=$!
 
 wait $P1 $P2 $P3

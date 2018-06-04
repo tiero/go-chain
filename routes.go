@@ -2,10 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
+
+type peerBody struct {
+	Peers []string
+}
 
 //Handlers
 func pingHandler(writer http.ResponseWriter, request *http.Request) {
@@ -16,6 +21,18 @@ func pingHandler(writer http.ResponseWriter, request *http.Request) {
 
 func blocksHandler(writer http.ResponseWriter, request *http.Request) {
 	response, err := json.MarshalIndent(node.Blockchain.blocks, "", "  ")
+	//Catch the error
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Internal Server Error"))
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte(response))
+}
+
+func peersHandler(writer http.ResponseWriter, request *http.Request) {
+	response, err := json.MarshalIndent(node.Config.Peers, "", "  ")
 	//Catch the error
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -39,7 +56,10 @@ func addPeersHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	//Add peers
-	//TODO
+	for _, p := range body.Peers {
+		log.Println(p)
+		node.Config.Peers = append(node.Config.Peers, AddressType(p))
+	}
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("new peers!"))
@@ -70,6 +90,11 @@ var routes = Routes{
 		"POST",
 		"/peer",
 		addPeersHandler,
+	},
+	Route{
+		"GET",
+		"/peer",
+		peersHandler,
 	},
 
 	/*
