@@ -16,6 +16,8 @@ func main() {
 		//Starting the blockchain from hardcoded genesis block
 		//blockchain = NewBlockchain()
 		node = NewNode(config)
+		//heartbeat := setTimeout(config.HeartbeatTimeout)
+
 		//Mux Router
 		router := NewRouter()
 		// Bind to a port and pass our router in

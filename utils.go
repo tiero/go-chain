@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -66,4 +67,11 @@ func filterConnectionFromEndpoint(connections []*websocket.Conn, endpoint string
 		}
 	}
 	return conn
+}
+
+func setTimeout(duration time.Duration) <-chan time.Time {
+	if duration == 0 {
+		return nil
+	}
+	return time.After(duration + (5 * time.Millisecond))
 }

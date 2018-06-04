@@ -26,13 +26,13 @@ go install
 Run the first node on port **3000**
 
 ```
-$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000
+$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000 --peers=127.0.0.1:4000
 ```
 
 Run the second node on port **4000**
 
 ```
-$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000
+$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000 --peers=127.0.0.1:3000
 ```
 
 ## Cluster
@@ -66,7 +66,23 @@ curl -X POST \
   -d '{ "Value":100000000, "Input":"@tiero", "Output": "@bob" }'
 ```
 
+## Peers
 
+Get list of peers
+
+```
+curl -X GET http://localhost:3000/peer 
+```
+
+Add new peers
+
+```
+curl -X POST \
+  http://localhost:3000/peer \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{ "Peers":["127.0.0.1:4000"] }'
+```
 
 
 
