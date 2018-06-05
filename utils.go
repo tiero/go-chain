@@ -4,10 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 func calculateHash(index uint64, term int, prevHash string, data Transaction, timestamp uint64) string {
@@ -37,36 +34,6 @@ func logState(n *Node) string {
 	default:
 		return "Unknown"
 	}
-}
-
-func filterEndpointsFromConnections(connections map[string]*websocket.Conn) (endpoints []string) {
-	keys := make([]string, len(connections))
-
-	i := 0
-	for k := range connections {
-		log.Println("∆========")
-		println(k)
-		println(connections[k].RemoteAddr().String())
-		log.Println("========")
-		keys[i] = k
-		i++
-	}
-
-	return keys
-}
-
-func filterConnectionFromEndpoint(connections []*websocket.Conn, endpoint string) *websocket.Conn {
-	conn := &websocket.Conn{}
-	for _, c := range connections {
-		log.Println("========")
-		log.Println(c.RemoteAddr().String())
-		log.Println(endpoint)
-		log.Println("========")
-		if c.RemoteAddr().String() == endpoint {
-			conn = c
-		}
-	}
-	return conn
 }
 
 func setTimeout(duration time.Duration) <-chan time.Time {

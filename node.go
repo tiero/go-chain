@@ -1,15 +1,19 @@
 package main
 
-import "log"
+import (
+	"log"
+	"sync"
+	"time"
+)
 
-//LeaderType struct
+// LeaderType struct
 type LeaderType struct {
 	leaderID    NodeIDType
 	nextHeight  map[string]uint64
 	matchHeight map[string]uint64
 }
 
-//Node States
+// Node States
 const (
 	follower  int = 0
 	candidate int = 1
@@ -19,27 +23,56 @@ const (
 
 // Node represent the current operating daemon
 type Node struct {
-	Config      Config
-	State       int
-	Leader      LeaderType
+	Config Config
+	State  int
+	Leader LeaderType
+	// lastContact is the last time we had contact from the
+	// leader node. This can be used to gauge staleness.
+	lastContact     time.Time
+	lastContactLock sync.RWMutex
+	//Blockchain
 	Blockchain  *Blockchain
 	BlockHeight uint64
 }
 
-//NewNode creates a new node in the network initialized with hardcoded genesisBlock
+// NewNode creates a new node in the network initialized with hardcoded genesisBlock
 func NewNode(config Config) *Node {
-	return &Node{config, follower, LeaderType{}, &Blockchain{0, nil, []*Block{}}, 0}
-}
-
-func (n *Node) init() {
-
+	return &Node{config, follower, LeaderType{}, time.Time{}, sync.RWMutex{}, &Blockchain{0, nil, []*Block{}}, 0}
 }
 
 func (n *Node) setState(nextState int) {
 	n.State = nextState
 }
 
-//AppendBlock is invoked by leader to replicate blocks; also used as heartbeat
+func (n *Node) setLastContact() {
+	n.lastContactLock.Lock()
+	n.lastContact = time.Now()
+	n.lastContactLock.Unlock()
+}
+
+func (n *Node) init() {
+	//TODO
+	//Add timeout for election and heartbeat
+	heartbeatTimeout := setTimeout(n.Config.HeartbeatTimeout)
+	for {
+		select {
+		case <-heartbeatTimeout:
+			//Restart timeout
+			heartbeatTimeout = setTimeout(n.Config.HeartbeatTimeout)
+			if time.Now().Sub(n.lastContact) < n.Config.HeartbeatTimeout {
+				continue
+			}
+			log.Println("The leader is lost")
+			//TODO Start new election phase
+			// set leaderID to zero value and become candidate
+			n.Leader.leaderID = ""
+			n.setState(candidate)
+		}
+
+	}
+}
+
+// AppendBlock is invoked by leader to replicate blocks; also used as heartbeat
 // prevBlockHeight and prevBlockTerm defines the last known to be committed block in the leader chain store
 // NextBlockHeight is the leader last commited block Index
 func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, prevBlockHeight uint64, prevBlockTerm int, nextBlockHeight uint64, nextBlock *Block) (int, bool) {
@@ -84,6 +117,7 @@ func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, prevBlockHeight 
 	log.Println("heartbeat: we should restart the election timeout")
 	//prevBlockHeight and prevLogTerm match, regardless if it is
 	//has been added or not a new block we return tru
+	n.setLastContact()
 	return n.Blockchain.currentTerm, true
 
 }

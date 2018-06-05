@@ -60,5 +60,5 @@ func generateConfigFromFlags() Config {
 		initialPeersAddresses = append(initialPeersAddresses, AddressType(ip))
 	}
 
-	return Config{NodeIDType(*id), AddressType(serverAddress), initialPeersAddresses, (5 * time.Millisecond), (5000 * time.Millisecond)}
+	return Config{NodeIDType(*id), AddressType(serverAddress), initialPeersAddresses, (1000 * time.Millisecond), (5000 * time.Millisecond)}
 }
