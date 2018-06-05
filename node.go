@@ -1,7 +1,10 @@
 package main
 
+import "log"
+
 //LeaderType struct
 type LeaderType struct {
+	leaderID    NodeIDType
 	nextHeight  map[string]uint64
 	matchHeight map[string]uint64
 }
@@ -25,25 +28,63 @@ type Node struct {
 
 //NewNode creates a new node in the network initialized with hardcoded genesisBlock
 func NewNode(config Config) *Node {
-	return &Node{config, follower, LeaderType{}, &Blockchain{0, nil, []*Block{genesisBlock()}}, 0}
+	return &Node{config, follower, LeaderType{}, &Blockchain{0, nil, []*Block{}}, 0}
+}
+
+func (n *Node) init() {
+
+}
+
+func (n *Node) setState(nextState int) {
+	n.State = nextState
 }
 
 //AppendBlock is invoked by leader to replicate blocks; also used as heartbeat
-func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, blockHeight uint64, blockTerm int, blocks []*Block, leaderBlockHeight uint64) (int, bool) {
-	//TODO
+// prevBlockHeight and prevBlockTerm defines the last known to be committed block in the leader chain store
+// NextBlockHeight is the leader last commited block Index
+func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, prevBlockHeight uint64, prevBlockTerm int, nextBlockHeight uint64, nextBlock *Block) (int, bool) {
+	//TODO Create helper for rules
+	//If request or response contains term T > currentTerm: set currentTerm = T, convert to follower
+	if leaderTerm > n.Blockchain.currentTerm {
+		n.Blockchain.currentTerm = leaderTerm
+		n.setState(follower)
+	}
+
+	//save the leaderID so we can redirects the clients
+	n.Leader.leaderID = leaderID
+	// Reply false if term < currentTerm
 	if leaderTerm < n.Blockchain.currentTerm {
 		return n.Blockchain.currentTerm, false
 	}
 
-	println("Sending request for mandatory replication")
-	println(n.Blockchain.currentTerm)
-	println(n.Config.ID)
-	println(n.Blockchain.currentTerm - 1)
-	println(n.BlockHeight)
-	println([]*Block{})
-	println("nextBlock Height")
+	//Reply false if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm
+	if n.Blockchain.getBlockAtIndex(prevBlockHeight) == nil {
+		return n.Blockchain.currentTerm, false
+	}
+	if n.Blockchain.getBlockAtIndex(prevBlockHeight).Term != prevBlockTerm {
+		return n.Blockchain.currentTerm, false
+	}
+	//If an existing block conflicts with a new one (same index but different terms), delete the existing block and all that follow it
+	if n.Blockchain.getBlockAtIndex(nextBlockHeight) != nil && n.Blockchain.getBlockAtIndex(nextBlockHeight).Term != nextBlock.Term {
+		n.Blockchain.removeBlocksFromIndex(nextBlockHeight)
+	}
 
-	return 0, true
+	//Append any block after checking if is valid against the previous one
+	if nextBlock != nil {
+		if isValidBlock(nextBlock, n.Blockchain.getBlockAtIndex(n.BlockHeight)) {
+			n.Blockchain.addBlock(nextBlock)
+			//Advance the index of highest block known to be committed
+			n.BlockHeight = nextBlockHeight
+			return n.Blockchain.currentTerm, true
+		}
+		return n.Blockchain.currentTerm, false
+	}
+
+	//It is only an heartbeat, do all the election timeout stuff
+	log.Println("heartbeat: we should restart the election timeout")
+	//prevBlockHeight and prevLogTerm match, regardless if it is
+	//has been added or not a new block we return tru
+	return n.Blockchain.currentTerm, true
 
 }
 

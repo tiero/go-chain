@@ -37,6 +37,42 @@ func genesisBlock() *Block {
 	return &Block{0, 1, GenesisBlockHash, "0", txData, GenesisTimestamp}
 }
 
+func (bc *Blockchain) getBlockAtIndex(index uint64) *Block {
+	for _, b := range bc.blocks {
+		if b.Index == index {
+			return b
+		}
+	}
+	return nil
+}
+
+func latestBlock(bc *Blockchain) *Block {
+	return bc.blocks[len(bc.blocks)-1]
+}
+
+func isValidBlock(newBlock *Block, previousBlock *Block) bool {
+	if (previousBlock.Index + 1) != newBlock.Index {
+		return false
+	} else if previousBlock.Hash != newBlock.PreviousHash {
+		return false
+	} else if calculateHashForBlock(newBlock) != newBlock.Hash {
+		return false
+	}
+	return true
+}
+
+func (bc *Blockchain) addBlock(nextBlock *Block) {
+	bc.blocks = append(bc.blocks, nextBlock)
+}
+
+func (bc *Blockchain) removeBlocksFromIndex(index uint64) {
+	for i, b := range bc.blocks {
+		if b.Index == index {
+			bc.blocks = bc.blocks[:i]
+		}
+	}
+}
+
 //BlockRewardValue returns the next BlockReward
 func BlockRewardValue() uint64 {
 	return InitialBlockReward
