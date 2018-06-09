@@ -9,8 +9,8 @@ import (
 // LeaderType struct
 type LeaderType struct {
 	leaderID    NodeIDType
-	nextHeight  map[string]uint64
-	matchHeight map[string]uint64
+	nextHeight  map[NodeIDType]uint64
+	matchHeight map[NodeIDType]uint64
 }
 
 // Node States
@@ -37,7 +37,7 @@ type Node struct {
 
 // NewNode creates a new node in the network initialized with hardcoded genesisBlock
 func NewNode(config Config) *Node {
-	return &Node{config, follower, LeaderType{}, time.Time{}, sync.RWMutex{}, &Blockchain{0, nil, []*Block{}}, 0}
+	return &Node{config, follower, LeaderType{}, time.Time{}, sync.RWMutex{}, &Blockchain{0, "", []*Block{}}, 0}
 }
 
 func (n *Node) setState(nextState int) {
@@ -67,6 +67,7 @@ func (n *Node) init() {
 			// set leaderID to zero value and become candidate
 			n.Leader.leaderID = ""
 			n.setState(candidate)
+
 		}
 
 	}
@@ -123,6 +124,21 @@ func (n *Node) AppendBlock(leaderTerm int, leaderID NodeIDType, prevBlockHeight 
 }
 
 //RequestVote is invoked by candidates to gather votes
-func (n *Node) RequestVote() {
+func (n *Node) RequestVote(candidateTerm int, candidateID NodeIDType, blockHeight uint64, blockTerm int) (int, bool) {
 	println("Sending request for gather vote")
+
+	if candidateTerm < n.Blockchain.currentTerm {
+		return n.Blockchain.currentTerm, false
+	}
+	if n.BlockHeight > blockHeight || n.Blockchain.currentTerm > blockTerm {
+		return n.Blockchain.currentTerm, false
+	}
+	//Grant a vote if null or already equal to candidateID
+	if n.Blockchain.votedFor == "" || n.Blockchain.votedFor == candidateID {
+		return n.Blockchain.currentTerm, true
+	}
+
+	// This means Already voted for someone else in the current term
+	// no possibility to grant a vote for the election
+	return n.Blockchain.currentTerm, false
 }

@@ -22,7 +22,7 @@ type Block struct {
 //Blockchain data model
 type Blockchain struct {
 	currentTerm int
-	votedFor    *NodeIDType
+	votedFor    NodeIDType
 	blocks      []*Block
 }
 

@@ -16,13 +16,12 @@ func main() {
 		//Starting the blockchain from hardcoded genesis block
 		//blockchain = NewBlockchain()
 		node = NewNode(config)
-
-		node.init()
-
+		//node.init()
 		//Mux Router
 		router := NewRouter()
 		// Bind to a port and pass our router in
 		log.Fatal(http.ListenAndServe(string(config.Address), router))
+
 	} else {
 		log.Panic("Error: Provide --host, --port and --id")
 	}
