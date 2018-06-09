@@ -1,7 +1,7 @@
 package main
 
-// GenesisBlockHash SHA256 hash of index, prevHash, txData, timestamp
-const GenesisBlockHash string = "3cd45a480c2601ed55245eac8b233c680f111eaad30c568a318e5213f7f0f522"
+// GenesisBlockHash SHA256 hash of index == 0, term == 1, prevHash = "0", txData, timestamp
+const GenesisBlockHash string = "e891fee258b64b4b017c07a193911c96a9499e52c776f64e5d054715a20068d6"
 
 // GenesisTimestamp Wednesday 9th May 2018 10:16:19 PM UTC
 const GenesisTimestamp uint64 = 1525904179

@@ -26,13 +26,13 @@ go install
 Run the first node on port **3000**
 
 ```
-$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000
+$GOPATH/bin/go-chain --id=@tiero  --host=127.0.0.1 --port=3000 --peers=127.0.0.1:4000
 ```
 
 Run the second node on port **4000**
 
 ```
-$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000
+$GOPATH/bin/go-chain --id=@alice  --host=127.0.0.1 --port=4000 --peers=127.0.0.1:3000
 ```
 
 ## Cluster
@@ -47,27 +47,6 @@ sh scripts/run-cluster
 If you close the process with `Ctrl + C`, the script will terminate the opened processes
 
 # Usage
-
-
-
-## Peers
-
-Get current peers connected 
-
-```
-curl -X GET http://localhost:3000/peer 
-```
-
-Add other nodes to the first node as a peer
-
-```
-curl -X POST \
-  http://localhost:3000/peer \
-  -H 'Cache-Control: no-cache' \
-  -H 'Content-Type: application/json' \
-  -d '{ "Peers":["ws://localhost:4000", "ws://localhost:5000"]}'
-```
-
 
 ## Block
 
@@ -87,7 +66,23 @@ curl -X POST \
   -d '{ "Value":100000000, "Input":"@tiero", "Output": "@bob" }'
 ```
 
+## Peers
 
+Get list of peers
+
+```
+curl -X GET http://localhost:3000/peer 
+```
+
+Add new peers
+
+```
+curl -X POST \
+  http://localhost:3000/peer \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{ "Peers":["127.0.0.1:4000"] }'
+```
 
 
 

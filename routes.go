@@ -1,10 +1,69 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
+
+type peerBody struct {
+	Peers []string
+}
+
+//Handlers
+func pingHandler(writer http.ResponseWriter, request *http.Request) {
+	//Pong
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte("Pong!"))
+}
+
+func blocksHandler(writer http.ResponseWriter, request *http.Request) {
+	response, err := json.MarshalIndent(node.Blockchain.blocks, "", "  ")
+	//Catch the error
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Internal Server Error"))
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte(response))
+}
+
+func peersHandler(writer http.ResponseWriter, request *http.Request) {
+	response, err := json.MarshalIndent(node.Config.Peers, "", "  ")
+	//Catch the error
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Internal Server Error"))
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte(response))
+}
+
+func addPeersHandler(writer http.ResponseWriter, request *http.Request) {
+	decoder := json.NewDecoder(request.Body)
+
+	var body peerBody
+	err := decoder.Decode(&body)
+
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Bad request"))
+		return
+	}
+
+	//Add peers
+	for _, p := range body.Peers {
+		log.Println(p)
+		node.Config.Peers = append(node.Config.Peers, AddressType(p))
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Write([]byte("new peers!"))
+}
 
 //Route is a type
 type Route struct {
@@ -20,33 +79,45 @@ var routes = Routes{
 	Route{
 		"GET",
 		"/ping",
-		PingHandler,
+		pingHandler,
 	},
 	Route{
 		"GET",
 		"/block",
-		BlocksHandler,
-	},
-	Route{
-		"POST",
-		"/block",
-		NewBlockHandler,
-	},
-	Route{
-		"GET",
-		"/peer",
-		PeersHandler,
+		blocksHandler,
 	},
 	Route{
 		"POST",
 		"/peer",
-		NewPeerHandler,
+		addPeersHandler,
 	},
 	Route{
 		"GET",
-		"/ws",
-		WebSocketHandler,
+		"/peer",
+		peersHandler,
 	},
+
+	/*
+		Route{
+			"POST",
+			"/block",
+			NewBlockHandler,
+		},
+		Route{
+			"GET",
+			"/peer",
+			PeersHandler,
+		},
+		Route{
+			"POST",
+			"/peer",
+			NewPeerHandler,
+		},
+		Route{
+			"GET",
+			"/ws",
+			WebSocketHandler,
+		}, */
 }
 
 //NewRouter start new router

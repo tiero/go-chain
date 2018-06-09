@@ -4,14 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
-
-	"github.com/gorilla/websocket"
+	"time"
 )
 
-func calculateHash(index uint64, prevHash string, data Transaction, timestamp uint64) string {
+func calculateHash(index uint64, term int, prevHash string, data Transaction, timestamp uint64) string {
 	txData := fmt.Sprint(data.Value) + data.Input + data.Output
-	payload := fmt.Sprint(index) + prevHash + txData + fmt.Sprint(timestamp)
+	payload := fmt.Sprint(index) + fmt.Sprint(term) + prevHash + txData + fmt.Sprint(timestamp)
 	h := sha256.New()
 	h.Write([]byte(payload))
 
@@ -20,35 +18,27 @@ func calculateHash(index uint64, prevHash string, data Transaction, timestamp ui
 }
 
 func calculateHashForBlock(block *Block) string {
-	return calculateHash(block.Index, block.PreviousHash, block.Data, block.Timestamp)
+	return calculateHash(block.Index, block.Term, block.PreviousHash, block.Data, block.Timestamp)
 }
 
-func filterEndpointsFromConnections(connections map[string]*websocket.Conn) (endpoints []string) {
-	keys := make([]string, len(connections))
-
-	i := 0
-	for k := range connections {
-		log.Println("∆========")
-		println(k)
-		println(connections[k].RemoteAddr().String())
-		log.Println("========")
-		keys[i] = k
-		i++
+func logState(n *Node) string {
+	switch n.State {
+	case follower:
+		return "Follower"
+	case candidate:
+		return "Candidate"
+	case leader:
+		return "Leader"
+	case shutdown:
+		return "Shutdown"
+	default:
+		return "Unknown"
 	}
-
-	return keys
 }
 
-func filterConnectionFromEndpoint(connections []*websocket.Conn, endpoint string) *websocket.Conn {
-	conn := &websocket.Conn{}
-	for _, c := range connections {
-		log.Println("========")
-		log.Println(c.RemoteAddr().String())
-		log.Println(endpoint)
-		log.Println("========")
-		if c.RemoteAddr().String() == endpoint {
-			conn = c
-		}
+func setTimeout(duration time.Duration) <-chan time.Time {
+	if duration == 0 {
+		return nil
 	}
-	return conn
+	return time.After(duration + (5 * time.Millisecond))
 }
