@@ -3,7 +3,9 @@ Permissioned Blockchain using [Raft](https://raft.github.io) consensus
 
 Written in Go
 
+### Disclaimer: This is an experiment. It's not stable and a lot of consensus implementation is missing.
 
+ 
 # Build
 
 In the root directory
